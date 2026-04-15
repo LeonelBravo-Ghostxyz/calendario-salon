@@ -292,7 +292,6 @@ const isAdmin = true;
         const url = isEdit ? `/api/eventos/${notaSeleccionada.id}` : '/api/eventos';
         const method = isEdit ? 'PUT' : 'POST';
         
-        // ¡ESTOS HEADERS ERAN LOS QUE FALTABAN!
         const res = await fetch(url, { 
           method, 
           headers: { 'Content-Type': 'application/json' }, 
@@ -321,7 +320,6 @@ const isAdmin = true;
 
   if (confirm('¿Seguro que deseas eliminar el registro de esta fecha?')) {
     try {
-      // IMPORTANTE: Asegúrate de usar backticks ` y no comillas simples '
       const res = await fetch(`/api/eventos/${id}`, { 
         method: 'DELETE' 
       });

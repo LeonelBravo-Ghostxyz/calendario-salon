@@ -1,27 +1,37 @@
+// src/pages/api/eventos/[id].ts
 import type { APIRoute } from 'astro';
 import clientPromise from '../../../db/database';
 import { ObjectId } from 'mongodb';
 
 export const PUT: APIRoute = async ({ params, request }) => {
   try {
-    const id = params.id;
-    if (!id || !ObjectId.isValid(id)) return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+    const { id } = params;
+    
+    // Si el ID no cumple el formato de Mongo, devolvemos error antes de tocar la DB
+    if (!id || !ObjectId.isValid(id)) {
+      return new Response(JSON.stringify({ error: 'ID de reserva no válido' }), { status: 400 });
+    }
 
-    const data = await request.json() as Record<string, any>;
+    const data = await request.json();
     const client = await clientPromise;
     const db = client.db('salonDB');
 
-    await db.collection('eventos').updateOne(
+    // IMPORTANTE: Usamos _id con un nuevo ObjectId(id)
+    const result = await db.collection('eventos').updateOne(
       { _id: new ObjectId(id) },
-      { $set: {
+      { 
+        $set: {
           cliente: String(data.cliente),
-          socio: Boolean(data.socio || false),
           turno: String(data.turno),
           telefono: String(data.telefono || ''),
           notas: String(data.notas || '')
-        }
+        } 
       }
     );
+
+    if (result.matchedCount === 0) {
+      return new Response(JSON.stringify({ error: 'No se encontró la reserva' }), { status: 404 });
+    }
     
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (error: any) {

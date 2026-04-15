@@ -4,7 +4,7 @@ import clientPromise from '../../db/database';
 export const GET: APIRoute = async () => {
   try {
     const client = await clientPromise;
-    const db = client.db('salonDB'); // Nombre de tu base de datos
+    const db = client.db('salonDB');
     
     // .find({}) trae todo, .sort({ turno: 1 }) ordena, y .toArray() lo hace un array normal
     const eventos = await db.collection('eventos').find({}).sort({ turno: 1 }).toArray();
