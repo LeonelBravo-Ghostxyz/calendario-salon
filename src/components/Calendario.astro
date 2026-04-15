@@ -257,7 +257,12 @@ const isAdmin = true;
       </div>
       <form id="reservaForm">
         <input type="text" id="f_cliente" class="form-input" placeholder="Nombre del Cliente" value="${isEdit ? notaSeleccionada.cliente : ''}" required autocomplete="off" />
-        
+
+        <select id="f_socio" class="form-input">
+          <option value="false" ${!isEdit || !notaSeleccionada.socio ? 'selected' : ''}>Cliente Regular</option>
+          <option value="true" ${isEdit && notaSeleccionada.socio ? 'selected' : ''}>Socio</option>
+        </select>
+
         <select id="f_turno" class="form-input">
           <option value="Mediodía" ${defaultTurno === 'Mediodía' ? 'selected' : ''}>Mediodía</option>
           <option value="Noche" ${defaultTurno === 'Noche' ? 'selected' : ''}>Noche</option>
@@ -276,6 +281,7 @@ const isAdmin = true;
       const payload = {
         fecha: isEdit ? notaSeleccionada.fecha : fechaSeleccionada,
         cliente: document.getElementById('f_cliente').value,
+        socio: document.getElementById('f_socio').value === 'true',
         turno: document.getElementById('f_turno').value,
         telefono: document.getElementById('f_telefono').value,
         notas: document.getElementById('f_notas').value,

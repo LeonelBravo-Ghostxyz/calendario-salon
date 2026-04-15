@@ -1,16 +1,20 @@
 import type { APIRoute } from 'astro';
-import db from '../../db/database';
+import clientPromise from '../../db/database';
 
 export const GET: APIRoute = async () => {
   try {
-    const stmt = db.prepare('SELECT * FROM eventos ORDER BY turno ASC');
-    const eventos = stmt.all();
+    const client = await clientPromise;
+    const db = client.db('salonDB'); // Nombre de tu base de datos
+    
+    // .find({}) trae todo, .sort({ turno: 1 }) ordena, y .toArray() lo hace un array normal
+    const eventos = await db.collection('eventos').find({}).sort({ turno: 1 }).toArray();
+    
     return new Response(JSON.stringify(eventos), { 
       status: 200, 
       headers: { 'Content-Type': 'application/json' } 
     });
   } catch (error: any) {
-    console.error("Error GET:", error);
+    console.error(error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 };
@@ -23,12 +27,22 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(JSON.stringify({ error: 'Faltan datos requeridos' }), { status: 400 });
     }
 
-    const stmt = db.prepare('INSERT INTO eventos (fecha, cliente, turno, telefono, notas, creado_en) VALUES (?, ?, ?, ?, ?, ?)');
-    const info = stmt.run(String(data.fecha), String(data.cliente), String(data.turno), String(data.telefono || ''), String(data.notas || ''), String(data.creado_en));
+    const client = await clientPromise;
+    const db = client.db('salonDB');
     
-    return new Response(JSON.stringify({ success: true, id: info.lastInsertRowid }), { status: 201 });
+    const result = await db.collection('eventos').insertOne({
+      fecha: String(data.fecha),
+      cliente: String(data.cliente),
+      socio: Boolean(data.socio || false),
+      turno: String(data.turno),
+      telefono: String(data.telefono || ''),
+      notas: String(data.notas || ''),
+      creado_en: String(data.creado_en)
+    });
+    
+    return new Response(JSON.stringify({ success: true, id: result.insertedId }), { status: 201 });
   } catch (error: any) {
-    console.error("Error POST:", error);
+    console.error(error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 };

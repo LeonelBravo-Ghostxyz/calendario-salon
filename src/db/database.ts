@@ -1,26 +1,33 @@
-import { DatabaseSync } from 'node:sqlite';
-import path from 'node:path';
+import { MongoClient } from 'mongodb';
 
-const db = new DatabaseSync(path.join(process.cwd(), 'salon.db'));
+// Usamos import.meta.env para que Astro lea tu archivo .env correctamente
+const uri = import.meta.env.MONGODB_URI || process.env.MONGODB_URI;
 
-try {
-  // Intentamos buscar la columna "cliente". Si falla, la tabla es la vieja.
-  db.prepare('SELECT cliente FROM eventos LIMIT 1').get();
-} catch (e) {
-  // Si falla, eliminamos la tabla vieja para que se regenere bien
-  db.exec('DROP TABLE IF EXISTS eventos');
+// Si la variable no existe, frenamos la app con un error claro
+if (!uri) {
+  throw new Error("Por favor, añade tu MONGODB_URI al archivo .env en la raíz del proyecto.");
 }
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS eventos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    fecha TEXT NOT NULL,
-    cliente TEXT NOT NULL,
-    turno TEXT NOT NULL,
-    telefono TEXT,
-    notas TEXT,
-    creado_en TEXT NOT NULL
-  )
-`);
+const options = {};
 
-export default db;
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
+
+if (import.meta.env.DEV) {
+  // En desarrollo usamos una variable global para no saturar la base de datos con cada guardado
+  let globalWithMongo = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient>;
+  };
+  
+  if (!globalWithMongo._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    globalWithMongo._mongoClientPromise = client.connect();
+  }
+  clientPromise = globalWithMongo._mongoClientPromise;
+} else {
+  // En producción (Vercel)
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
+}
+
+export default clientPromise;
