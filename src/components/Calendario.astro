@@ -240,7 +240,7 @@ const isAdmin = true;
         <p><strong>Notas:</strong> <br/>${nota.notas || '-'}</p>
       </div>
       <div class="toast-btn-row">
-        <button class="nav-btn" style="flex:1; background:rgba(239, 68, 68, 0.8);" onclick="eliminarReserva(${nota.id})">Eliminar</button>
+        <button class="nav-btn" style="flex:1; background:rgba(239, 68, 68, 0.8);" onclick="eliminarReserva('${nota._id}')">Eliminar</button>
         <button class="nav-btn" style="flex:1; background:rgba(59, 130, 246, 0.8);" onclick="mostrarFormulario(true)">Editar</button>
       </div>
     `;
@@ -314,17 +314,30 @@ const isAdmin = true;
   }
 
   window.eliminarReserva = async function(id) {
-    if (confirm('¿Seguro que deseas eliminar el registro de esta fecha?')) {
-      try {
-        const res = await fetch(`/api/eventos/${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error("No se pudo eliminar");
-        cerrarToast();
-        fetchEventos();
-      } catch (err) {
-        alert(err.message);
+  if (!id) {
+    alert("Error: No se encontró el ID de la reserva.");
+    return;
+  }
+
+  if (confirm('¿Seguro que deseas eliminar el registro de esta fecha?')) {
+    try {
+      // IMPORTANTE: Asegúrate de usar backticks ` y no comillas simples '
+      const res = await fetch(`/api/eventos/${id}`, { 
+        method: 'DELETE' 
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "No se pudo eliminar");
       }
+
+      cerrarToast();
+      fetchEventos(); // Esto recarga el calendario
+    } catch (err) {
+      alert("Error al eliminar: " + err.message);
     }
   }
+}
 
   // --- Controles de Meses ---
   document.getElementById('prevMonth').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
