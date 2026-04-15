@@ -227,7 +227,10 @@ const isAdmin = true;
   }
 
   window.mostrarToastDatos = function(nota) {
+    // IMPORTANTE: Guardamos la nota completa en la variable global.
+    // Esto es lo que 'mostrarFormulario' usará para sacar el _id.
     notaSeleccionada = nota;
+
     toastBox.innerHTML = `
       <div class="toast-flex">
         <h3 style="margin:0;">${nota.turno}</h3>
@@ -240,8 +243,11 @@ const isAdmin = true;
         <p><strong>Notas:</strong> <br/>${nota.notas || '-'}</p>
       </div>
       <div class="toast-btn-row">
-        <button class="nav-btn" style="flex:1; background:rgba(239, 68, 68, 0.8);" onclick="eliminarReserva('${nota._id}')">Eliminar</button>
-        <button class="nav-btn" style="flex:1; background:rgba(59, 130, 246, 0.8);" onclick="mostrarFormulario(true)">Editar</button>
+        <button class="nav-btn" style="flex:1; background:rgba(239, 68, 68, 0.8);" 
+                onclick="eliminarReserva('${nota._id}')">Eliminar</button>
+        
+        <button class="nav-btn" style="flex:1; background:rgba(59, 130, 246, 0.8);" 
+                onclick="mostrarFormulario(true)">Editar</button>
       </div>
     `;
     toastOverlay.classList.remove('hidden');
@@ -275,41 +281,46 @@ const isAdmin = true;
       </form>
     `;
 
-    document.getElementById('reservaForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const payload = {
-        fecha: isEdit ? notaSeleccionada.fecha : fechaSeleccionada,
-        cliente: document.getElementById('f_cliente').value,
-        socio: document.getElementById('f_socio').value === 'true',
-        turno: document.getElementById('f_turno').value,
-        telefono: document.getElementById('f_telefono').value,
-        notas: document.getElementById('f_notas').value,
-        creado_en: isEdit ? notaSeleccionada.creado_en : new Date().toLocaleString('es-AR')
-      };
+document.getElementById('reservaForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Determinamos si es edición usando la presencia de notaSeleccionada
+  const isEdit = !!notaSeleccionada;
+  
+  const payload = {
+    fecha: isEdit ? notaSeleccionada.fecha : fechaSeleccionada,
+    cliente: document.getElementById('f_cliente').value,
+    turno: document.getElementById('f_turno').value,
+    telefono: document.getElementById('f_telefono').value,
+    notas: document.getElementById('f_notas').value,
+    creado_en: isEdit ? notaSeleccionada.creado_en : new Date().toLocaleString('es-AR')
+  };
 
-      try {
-        const url = isEdit ? `/api/eventos/${notaSeleccionada.id}` : '/api/eventos';
-        const method = isEdit ? 'PUT' : 'POST';
-        
-        const res = await fetch(url, { 
-          method, 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify(payload) 
-        });
+  try {
+  // USAR notaSeleccionada._id (con guion bajo)
+  const url = isEdit ? `/api/eventos/${notaSeleccionada._id}` : '/api/eventos';
+  const method = isEdit ? 'PUT' : 'POST';
+  
+  const res = await fetch(url, { 
+    method, 
+    headers: { 'Content-Type': 'application/json' }, 
+    body: JSON.stringify(payload) 
+  });
 
-        if (!res.ok) {
-          const errData = await res.json();
-          alert("Error del servidor: " + errData.error);
-          return;
-        }
-        
-        cerrarToast();
-        fetchEventos();
-      } catch (err) {
-        alert("Error de red al intentar guardar la reserva.");
-      }
-    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      alert("Error de servidor: " + result.error);
+      return;
+    }
+    
+    cerrarToast();
+    fetchEventos(); // Recarga el calendario
+    notaSeleccionada = null; // Limpiamos la selección
+  } catch (err) {
+    alert("Error de red al intentar guardar la reserva.");
+  }
+  });
   }
 
   window.eliminarReserva = async function(id) {
