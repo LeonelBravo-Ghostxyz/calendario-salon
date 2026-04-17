@@ -1,17 +1,19 @@
----
-const isAdmin = true;
----
-
 <div class="calendar-panel glass-container">
   <header class="calendar-header">
     <button id="prevMonth" class="nav-btn">&lt;</button>
-    <h2 id="monthYearTitle" class="calendar-title">Cargando...</h2>
+    
+    <div style="display:flex; align-items:center; gap:0.8rem;">
+      <h2 id="monthYearTitle" class="calendar-title" title="Buscar mes">Cargando...</h2>
+      <button id="btnUnlock" class="nav-btn" style="background:transparent; border: 1px solid rgba(255,255,255,0.2); padding: 0.3rem 0.6rem;" title="Ingresar como Administrador">🔒</button>
+    </div>
+    
     <button id="nextMonth" class="nav-btn">&gt;</button>
   </header>
 
   <div class="calendar-grid days-of-week">
     <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
   </div>
+  
   <div id="calendarGrid" class="calendar-grid days-grid"></div>
 </div>
 
@@ -75,63 +77,31 @@ const isAdmin = true;
 
   /* --- Diseño Responsivo para Móviles --- */
   @media (max-width: 768px) {
-    .glass-container {
-      padding: 0.5rem; /* Aprovechamos más el ancho de la pantalla */
-      border-radius: 12px;
-    }
-    
-    .calendar-header {
-      margin-bottom: 1rem;
-    }
-    
-    .calendar-title {
-      font-size: 1.1rem;
-      padding: 0.4rem;
-    }
-
-    .nav-btn {
-      padding: 0.4rem 0.8rem;
-      font-size: 1rem;
-    }
-
-    .calendar-grid {
-      gap: 3px; /* Reducimos el espacio entre las celdas */
-    }
-
-    .days-of-week span {
-      font-size: 0.75rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    :global(.day-cell) {
-      min-height: 85px; /* Celdas un poco más bajas */
-      padding: 4px;
-      border-radius: 6px;
-    }
-
-    :global(.day-number) {
-      font-size: 0.75rem;
-    }
-
-    :global(.event-badge) {
-      font-size: 0.65rem; /* Texto más pequeño para las notas */
-      padding: 2px 4px;
-      border-radius: 3px;
-    }
+    .glass-container { padding: 0.5rem; border-radius: 12px; }
+    .calendar-header { margin-bottom: 1rem; }
+    .calendar-title { font-size: 1.1rem; padding: 0.4rem; }
+    .nav-btn { padding: 0.4rem 0.8rem; font-size: 1rem; }
+    .calendar-grid { gap: 3px; }
+    .days-of-week span { font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; }
+    :global(.day-cell) { min-height: 85px; padding: 4px; border-radius: 6px; }
+    :global(.day-number) { font-size: 0.75rem; }
+    :global(.event-badge) { font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; }
   }
 </style>
 
-<script define:vars={{ isAdmin }}>
-  const grid = document.getElementById('calendarGrid');
-  const title = document.getElementById('monthYearTitle');
-  const toastOverlay = document.getElementById('toastOverlay');
-  const toastBox = document.getElementById('toastBox');
+<script>
+  let adminPass: string | null = sessionStorage.getItem('salon_admin_pass') || null;
+  let isAdmin: boolean = !!adminPass;
+
+  const grid = document.getElementById('calendarGrid') as HTMLElement;
+  const title = document.getElementById('monthYearTitle') as HTMLElement;
+  const toastOverlay = document.getElementById('toastOverlay') as HTMLElement;
+  const toastBox = document.getElementById('toastBox') as HTMLElement;
   
   let currentDate = new Date();
-  let eventos = [];
-  let fechaSeleccionada = "";
-  let notaSeleccionada = null;
+  let eventos: any[] = [];
+  let fechaSeleccionada: string = "";
+  let notaSeleccionada: any = null;
 
   const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -169,7 +139,7 @@ const isAdmin = true;
       
       const numeroDia = document.createElement('span');
       numeroDia.className = 'day-number';
-      numeroDia.textContent = i;
+      numeroDia.textContent = String(i);
       cell.appendChild(numeroDia);
 
       const mesF = String(month + 1).padStart(2, '0');
@@ -178,7 +148,6 @@ const isAdmin = true;
 
       const notasDelDia = eventos.filter(e => e.fecha === fechaActualString);
       
-      // Ordenar: Mediodía primero
       notasDelDia.sort((a, b) => a.turno === 'Mediodía' ? -1 : 1);
 
       notasDelDia.forEach(nota => {
@@ -189,7 +158,7 @@ const isAdmin = true;
         if (isAdmin) {
           badge.addEventListener('click', (e) => {
             e.stopPropagation(); 
-            mostrarToastDatos(nota);
+            (window as any).mostrarToastDatos(nota);
           });
         }
         cell.appendChild(badge);
@@ -200,7 +169,7 @@ const isAdmin = true;
           if (notasDelDia.length >= 2) {
             alert('Este día ya tiene sus dos turnos (Mediodía y Noche) ocupados.');
           } else {
-            mostrarToastVacio(fechaActualString);
+            (window as any).mostrarToastVacio(fechaActualString);
           }
         });
       }
@@ -208,12 +177,12 @@ const isAdmin = true;
     }
   }
 
-  // --- Funciones del Toast ---
-  window.cerrarToast = function() {
+  // --- Funciones Globales del Toast ---
+  (window as any).cerrarToast = function() {
     toastOverlay.classList.add('hidden');
-  }
+  };
 
-  function mostrarToastVacio(fecha) {
+  (window as any).mostrarToastVacio = function(fecha: string) {
     fechaSeleccionada = fecha;
     toastBox.innerHTML = `
       <div class="toast-flex">
@@ -224,11 +193,9 @@ const isAdmin = true;
       <button class="nav-btn" style="width:100%; background:#10b981; margin-top:0.5rem;" onclick="mostrarFormulario(false)">Añadir Reserva</button>
     `;
     toastOverlay.classList.remove('hidden');
-  }
+  };
 
-  window.mostrarToastDatos = function(nota) {
-    // IMPORTANTE: Guardamos la nota completa en la variable global.
-    // Esto es lo que 'mostrarFormulario' usará para sacar el _id.
+  (window as any).mostrarToastDatos = function(nota: any) {
     notaSeleccionada = nota;
 
     toastBox.innerHTML = `
@@ -251,9 +218,9 @@ const isAdmin = true;
       </div>
     `;
     toastOverlay.classList.remove('hidden');
-  }
+  };
 
-  window.mostrarFormulario = function(isEdit) {
+  (window as any).mostrarFormulario = function(isEdit: boolean) {
     const defaultTurno = isEdit ? notaSeleccionada.turno : 'Mediodía';
     
     toastBox.innerHTML = `
@@ -281,76 +248,133 @@ const isAdmin = true;
       </form>
     `;
 
-document.getElementById('reservaForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  // Determinamos si es edición usando la presencia de notaSeleccionada
-  const isEdit = !!notaSeleccionada;
-  
-  const payload = {
-    fecha: isEdit ? notaSeleccionada.fecha : fechaSeleccionada,
-    cliente: document.getElementById('f_cliente').value,
-    turno: document.getElementById('f_turno').value,
-    telefono: document.getElementById('f_telefono').value,
-    notas: document.getElementById('f_notas').value,
-    creado_en: isEdit ? notaSeleccionada.creado_en : new Date().toLocaleString('es-AR')
+    document.getElementById('reservaForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const payload = {
+        fecha: isEdit ? notaSeleccionada.fecha : fechaSeleccionada,
+        cliente: (document.getElementById('f_cliente') as HTMLInputElement).value,
+        socio: (document.getElementById('f_socio') as HTMLSelectElement).value === 'true',
+        turno: (document.getElementById('f_turno') as HTMLSelectElement).value,
+        telefono: (document.getElementById('f_telefono') as HTMLInputElement).value,
+        notas: (document.getElementById('f_notas') as HTMLTextAreaElement).value,
+        creado_en: isEdit ? notaSeleccionada.creado_en : new Date().toLocaleString('es-AR')
+      };
+
+      try {
+        const url = isEdit ? `/api/eventos/${notaSeleccionada._id}` : '/api/eventos';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const res = await fetch(url, { 
+          method, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPass || ''
+          }, 
+          body: JSON.stringify(payload) 
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          alert("Error de servidor: " + (result.error || 'No autorizado'));
+          return;
+        }
+        
+        (window as any).cerrarToast();
+        fetchEventos(); 
+        notaSeleccionada = null; 
+      } catch (err) {
+        alert("Error de red al intentar guardar la reserva.");
+      }
+    });
   };
 
-  try {
-  // USAR notaSeleccionada._id (con guion bajo)
-  const url = isEdit ? `/api/eventos/${notaSeleccionada._id}` : '/api/eventos';
-  const method = isEdit ? 'PUT' : 'POST';
-  
-  const res = await fetch(url, { 
-    method, 
-    headers: { 'Content-Type': 'application/json' }, 
-    body: JSON.stringify(payload) 
-  });
-
-    const result = await res.json();
-
-    if (!res.ok) {
-      alert("Error de servidor: " + result.error);
+  (window as any).eliminarReserva = async function(id: string) {
+    if (!id) {
+      alert("Error: No se encontró el ID de la reserva.");
       return;
     }
-    
-    cerrarToast();
-    fetchEventos(); // Recarga el calendario
-    notaSeleccionada = null; // Limpiamos la selección
-  } catch (err) {
-    alert("Error de red al intentar guardar la reserva.");
-  }
-  });
-  }
 
-  window.eliminarReserva = async function(id) {
-  if (!id) {
-    alert("Error: No se encontró el ID de la reserva.");
-    return;
-  }
+    if (confirm('¿Seguro que deseas eliminar el registro de esta fecha?')) {
+      try {
+        const res = await fetch(`/api/eventos/${id}`, { 
+          method: 'DELETE',
+          headers: {
+            'x-admin-password': adminPass || ''
+          }
+        });
 
-  if (confirm('¿Seguro que deseas eliminar el registro de esta fecha?')) {
-    try {
-      const res = await fetch(`/api/eventos/${id}`, { 
-        method: 'DELETE' 
-      });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "No se pudo eliminar");
+        }
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "No se pudo eliminar");
+        (window as any).cerrarToast();
+        fetchEventos(); 
+      } catch (err: any) {
+        alert("Error al eliminar: " + err.message);
       }
-
-      cerrarToast();
-      fetchEventos(); // Esto recarga el calendario
-    } catch (err) {
-      alert("Error al eliminar: " + err.message);
     }
+  };
+
+// --- Lógica del Candado ---
+  const btnUnlock = document.getElementById('btnUnlock') as HTMLElement;
+  btnUnlock.addEventListener('click', async () => {
+    if (isAdmin) {
+      // Si ya es admin y toca el candado, cerramos sesión
+      sessionStorage.removeItem('salon_admin_pass');
+      window.location.reload();
+    } else {
+      // Si no es admin, pedimos la clave
+      const pass = prompt("Ingresa la clave de administrador:");
+      
+      if (pass) {
+        try {
+          btnUnlock.textContent = '⏳'; // Pequeño feedback visual de carga
+          
+          // Le preguntamos al servidor si la clave es correcta
+          const res = await fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'x-admin-password': pass }
+          });
+
+          if (res.ok) {
+            // ¡Clave correcta! La guardamos y recargamos
+            sessionStorage.setItem('salon_admin_pass', pass);
+            window.location.reload(); 
+          } else {
+            // Clave incorrecta
+            alert("Contraseña incorrecta. Acceso denegado.");
+            btnUnlock.textContent = '🔒'; // Volvemos al candado cerrado
+          }
+        } catch (error) {
+          alert("Error al verificar la contraseña.");
+          btnUnlock.textContent = '🔒';
+        }
+      }
+    }
+  });
+
+  if (isAdmin) {
+    btnUnlock.textContent = '🔓';
+    btnUnlock.style.background = 'rgba(16, 185, 129, 0.3)';
+    btnUnlock.title = "Cerrar sesión";
   }
-}
 
   // --- Controles de Meses ---
-  document.getElementById('prevMonth').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
-  document.getElementById('nextMonth').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+  const prevMonthBtn = document.getElementById('prevMonth') as HTMLElement;
+  const nextMonthBtn = document.getElementById('nextMonth') as HTMLElement;
+
+  prevMonthBtn.addEventListener('click', () => { 
+    currentDate.setMonth(currentDate.getMonth() - 1); 
+    renderCalendar(); 
+  });
+  
+  nextMonthBtn.addEventListener('click', () => { 
+    currentDate.setMonth(currentDate.getMonth() + 1); 
+    renderCalendar(); 
+  });
   
   title.addEventListener('click', () => {
     const input = prompt("Buscar (MM-YYYY):", `${String(currentDate.getMonth() + 1).padStart(2, '0')}-${currentDate.getFullYear()}`);
@@ -362,5 +386,6 @@ document.getElementById('reservaForm').addEventListener('submit', async (e) => {
     }
   });
 
+  // Carga inicial
   fetchEventos();
 </script>

@@ -21,6 +21,11 @@ export const GET: APIRoute = async () => {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    const pass = request.headers.get('x-admin-password');
+    if (pass !== import.meta.env.ADMIN_PASSWORD) {
+      return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+    }
+
     const data = await request.json() as Record<string, any>;
     
     if (!data.fecha || !data.cliente || !data.turno) {

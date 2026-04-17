@@ -5,6 +5,11 @@ import { ObjectId } from 'mongodb';
 
 export const PUT: APIRoute = async ({ params, request }) => {
   try {
+    const pass = request.headers.get('x-admin-password');
+    if (pass !== import.meta.env.ADMIN_PASSWORD) {
+      return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+    }
+
     const { id } = params;
     
     // Si el ID no cumple el formato de Mongo, devolvemos error antes de tocar la DB
@@ -39,8 +44,13 @@ export const PUT: APIRoute = async ({ params, request }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ params, request }) => {
   try {
+    const pass = request.headers.get('x-admin-password');
+    if (pass !== import.meta.env.ADMIN_PASSWORD) {
+      return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+    }
+
     const { id } = params;
 
     // Validación crítica para MongoDB
