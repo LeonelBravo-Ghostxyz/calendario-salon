@@ -1,5 +1,12 @@
 ---
+
+//TODO: Agregar support para fondo personalizado conectado a la db
 // src/layouts/Layout.astro
+export interface Props {
+	backgroundUrl?: string | null;
+}
+
+const { backgroundUrl } = Astro.props;
 ---
 <!doctype html>
 <html lang="es">
@@ -12,14 +19,64 @@
 		<title>Calendario de Reservas</title>
 	</head>
 	<body>
+		{backgroundUrl && (
+			<div class="custom-bg" style={`background-image: url('${backgroundUrl}');`}></div>
+		)}
+		
 		<slot />
+
+		<button id="themeToggle" class="theme-btn" title="Cambiar Tema">
+			<span class="icon-sun">☀️</span>
+			<span class="icon-moon">🌙</span>
+		</button>
+
+		<script>
+			const themeBtn = document.getElementById('themeToggle');
+			const htmlEl = document.documentElement;
+
+			// Cargar el tema guardado
+			if (localStorage.getItem('theme') === 'light') {
+				htmlEl.classList.add('light-theme');
+			}
+
+			themeBtn?.addEventListener('click', () => {
+				htmlEl.classList.toggle('light-theme');
+				const isLight = htmlEl.classList.contains('light-theme');
+				localStorage.setItem('theme', isLight ? 'light' : 'dark');
+			});
+		</script>
 	</body>
 </html>
 
 <style is:global>
-	/* Le decimos al navegador que toda la app es oscura para que los inputs y popups nativos se adapten */
 	:root {
+		/* Variables Tema Oscuro (Defecto) */
 		color-scheme: dark;
+		--bg-color: #0f172a;
+		--bg-gradient: radial-gradient(at top left, #1e293b, #020617);
+		--text-color: #f8fafc;
+		--text-muted: #94a3b8;
+		--glass-bg: rgba(255, 255, 255, 0.05);
+		--glass-border: rgba(255, 255, 255, 0.1);
+		--glass-hover: rgba(255, 255, 255, 0.15);
+		--glass-cell: rgba(255, 255, 255, 0.03);
+		--glass-popover: rgba(30, 41, 59, 0.95);
+		--input-bg: rgba(0, 0, 0, 0.2);
+	}
+
+	:root.light-theme {
+		/* Variables Tema Claro */
+		color-scheme: light;
+		--bg-color: #f8fafc;
+		--bg-gradient: radial-gradient(at top left, #ffffff, #e2e8f0);
+		--text-color: #0f172a;
+		--text-muted: #475569;
+		--glass-bg: rgba(255, 255, 255, 0.6);
+		--glass-border: rgba(0, 0, 0, 0.1);
+		--glass-hover: rgba(0, 0, 0, 0.1);
+		--glass-cell: rgba(255, 255, 255, 0.4);
+		--glass-popover: rgba(255, 255, 255, 0.95);
+		--input-bg: rgba(255, 255, 255, 0.8);
 	}
 
 	html,
@@ -28,12 +85,58 @@
 		padding: 0;
 		width: 100%;
 		min-height: 100vh;
-		/* Fondo oscuro base */
-		background-color: #0f172a; 
-		/* Un gradiente sutil radial para que el efecto cristal (glassmorphism) resalte mucho más */
-		background-image: radial-gradient(at top left, #1e293b, #020617);
+		background-color: var(--bg-color);
+		background-image: var(--bg-gradient);
 		background-attachment: fixed;
-		color: #f8fafc;
+		color: var(--text-color);
 		font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		transition: background-color 0.3s ease, color 0.3s ease;
 	}
+
+	/* Ocultar el degradado si hay imagen para que no colisionen visualmente */
+	body:has(.custom-bg) {
+		background-image: none !important;
+	}
+
+	.custom-bg {
+		position: fixed;
+		top: 0; left: 0; width: 100%; height: 100%;
+		background-size: cover;
+		background-position: center;
+		z-index: -1;
+		opacity: 0.25; /* Para no perder legibilidad del calendario, ajustable */
+		transition: opacity 0.3s ease;
+	}
+
+	/* Diseño del botón en la esquina inferior derecha */
+	.theme-btn {
+		position: fixed;
+		bottom: 24px;
+		right: 24px;
+		width: 50px;
+		height: 50px;
+		border-radius: 50%;
+		background: var(--glass-bg);
+		border: 1px solid var(--glass-border);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		color: var(--text-color);
+		font-size: 1.5rem;
+		cursor: pointer;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+		transition: transform 0.2s ease, background 0.2s ease;
+		z-index: 9999;
+	}
+
+	.theme-btn:hover {
+		transform: scale(1.1);
+		background: var(--glass-hover);
+	}
+
+	.icon-moon { display: none; }
+	:root.light-theme .icon-sun { display: none; }
+	:root.light-theme .icon-moon { display: inline; }
 </style>

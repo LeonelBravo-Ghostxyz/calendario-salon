@@ -2,9 +2,25 @@
 import Layout from '../layouts/Layout.astro';
 import NavBar from '../components/NavBar.astro';
 import Calendario from '../components/Calendario.astro';
+import clientPromise from '../db/database';
+
+// Buscamos la configuración en la base de datos (si existe)
+let backgroundUrl = null;
+try {
+  const client = await clientPromise;
+  const db = client.db('salonDB');
+  
+  // Asumimos que tenemos una colección "config" con un documento { key: "settings", bgUrl: "https://tu-link.com/imagen.jpg" }
+  const config = await db.collection('config').findOne({ key: 'settings' });
+  if (config && config.bgUrl) {
+    backgroundUrl = config.bgUrl;
+  }
+} catch (error) {
+  console.error("No se pudo obtener el fondo de la BD:", error);
+}
 ---
 
-<Layout>
+<Layout backgroundUrl={backgroundUrl}>
   <NavBar />
   <main style="padding: 2rem;">
     <Calendario />

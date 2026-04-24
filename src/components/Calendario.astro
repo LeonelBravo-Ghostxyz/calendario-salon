@@ -24,32 +24,41 @@
 
 <style>
   .glass-container {
-    background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); color: #e2e8f0; max-width: 900px; margin: 0 auto;
+    background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); color: var(--text-color); max-width: 900px; margin: 0 auto;
     font-family: system-ui, -apple-system, sans-serif;
   }
   .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
   .calendar-title { cursor: pointer; margin: 0; padding: 0.5rem 1rem; border-radius: 8px; }
-  .calendar-title:hover { background-color: rgba(255, 255, 255, 0.1); }
-  .nav-btn { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
-  .nav-btn:hover { background: rgba(255, 255, 255, 0.2); }
+  .calendar-title:hover { background-color: var(--glass-hover); }
+  .nav-btn { background: var(--glass-bg); border: none; color: var(--text-color); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+  .nav-btn:hover { background: var(--glass-hover); }
   .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
   .days-of-week span { text-align: center; font-weight: 600; font-size: 0.9rem; padding-bottom: 0.5rem; }
 
   :global(.day-cell) {
-    min-height: 110px; padding: 8px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05); transition: background-color 0.3s ease;
+    min-height: 110px; padding: 8px; border-radius: 8px; background-color: var(--glass-cell);
+    border: 1px solid var(--glass-border); transition: background-color 0.3s ease;
     display: flex; flex-direction: column; gap: 4px;
+    min-width: 0; 
   }
   :global(.day-cell:not(.empty-cell)) { cursor: pointer; }
-  :global(.day-cell:not(.empty-cell):hover) { background-color: rgba(255, 255, 255, 0.08); }
+  :global(.day-cell:not(.empty-cell):hover) { background-color: var(--glass-hover); }
   :global(.empty-cell) { background: transparent; border: none; }
   :global(.day-number) { font-size: 0.85rem; opacity: 0.8; align-self: flex-end; }
   
   :global(.event-badge) {
     font-size: 0.75rem; background-color: rgba(59, 130, 246, 0.4); border: 1px solid rgba(59, 130, 246, 0.8);
-    padding: 4px 6px; border-radius: 4px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding: 4px 6px; border-radius: 4px; color: white; 
+    
+    /* Reglas estrictas para truncar el texto */
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    width: 100%; 
+    box-sizing: border-box;
+    display: block; /* Forzamos a que respete el 100% del ancho en vez de comportarse como texto libre */
   }
   :global(.badge-mediodia) { background-color: rgba(245, 158, 11, 0.4); border-color: rgba(245, 158, 11, 0.8); }
 
@@ -62,17 +71,17 @@
   }
   .toast-overlay.hidden { opacity: 0; pointer-events: none; }
   .glass-popover {
-    background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(255,255,255,0.15);
+    background: var(--glass-popover); border: 1px solid var(--glass-border);
     border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 320px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3); color: white; font-family: system-ui;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3); color: var(--text-color); font-family: system-ui;
   }
   :global(.form-input) {
-    width: 100%; padding: 0.7rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(0,0,0,0.2); color: white; margin-bottom: 0.8rem; box-sizing: border-box;
+    width: 100%; padding: 0.7rem; border-radius: 6px; border: 1px solid var(--glass-border);
+    background: var(--input-bg); color: var(--text-color); margin-bottom: 0.8rem; box-sizing: border-box;
   }
   :global(.toast-flex) { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-  :global(.toast-close) { background: none; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; }
-  :global(.toast-close:hover) { color: white; }
+  :global(.toast-close) { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+  :global(.toast-close:hover) { color: var(--text-color); }
   :global(.toast-btn-row) { display: flex; gap: 0.5rem; margin-top: 1rem; }
 
   /* --- Diseño Responsivo para Móviles --- */
@@ -189,7 +198,7 @@
         <h3 style="margin:0;">Día: ${fecha}</h3>
         <button class="toast-close" onclick="cerrarToast()">✖</button>
       </div>
-      <p style="color:#94a3b8; font-size:0.9rem;">No hay eventos seleccionados.</p>
+      <p style="color:var(--text-muted); font-size:0.9rem;">No hay eventos seleccionados.</p>
       <button class="nav-btn" style="width:100%; background:#10b981; margin-top:0.5rem;" onclick="mostrarFormulario(false)">Añadir Reserva</button>
     `;
     toastOverlay.classList.remove('hidden');
@@ -203,7 +212,7 @@
         <h3 style="margin:0;">${nota.turno}</h3>
         <button class="toast-close" onclick="cerrarToast()">✖</button>
       </div>
-      <div style="font-size:0.9rem; color:#cbd5e1; line-height: 1.6;">
+      <div style="font-size:0.9rem; color:var(--text-color); line-height: 1.6;">
         <p><strong>Cliente:</strong> ${nota.cliente}</p>
         <p><strong>Teléfono:</strong> ${nota.telefono || '-'}</p>
         <p><strong>Registro:</strong> ${nota.creado_en}</p>
