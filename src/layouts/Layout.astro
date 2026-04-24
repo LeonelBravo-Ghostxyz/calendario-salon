@@ -1,12 +1,5 @@
 ---
-
-//TODO: Agregar support para fondo personalizado conectado a la db
 // src/layouts/Layout.astro
-export interface Props {
-	backgroundUrl?: string | null;
-}
-
-const { backgroundUrl } = Astro.props;
 ---
 <!doctype html>
 <html lang="es">
@@ -19,10 +12,6 @@ const { backgroundUrl } = Astro.props;
 		<title>Calendario de Reservas</title>
 	</head>
 	<body>
-		{backgroundUrl && (
-			<div class="custom-bg" style={`background-image: url('${backgroundUrl}');`}></div>
-		)}
-		
 		<slot />
 
 		<button id="themeToggle" class="theme-btn" title="Cambiar Tema">
@@ -91,21 +80,6 @@ const { backgroundUrl } = Astro.props;
 		color: var(--text-color);
 		font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		transition: background-color 0.3s ease, color 0.3s ease;
-	}
-
-	/* Ocultar el degradado si hay imagen para que no colisionen visualmente */
-	body:has(.custom-bg) {
-		background-image: none !important;
-	}
-
-	.custom-bg {
-		position: fixed;
-		top: 0; left: 0; width: 100%; height: 100%;
-		background-size: cover;
-		background-position: center;
-		z-index: -1;
-		opacity: 0.25; /* Para no perder legibilidad del calendario, ajustable */
-		transition: opacity 0.3s ease;
 	}
 
 	/* Diseño del botón en la esquina inferior derecha */

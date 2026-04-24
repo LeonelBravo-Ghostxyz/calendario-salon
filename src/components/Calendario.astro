@@ -4,7 +4,7 @@
     
     <div style="display:flex; align-items:center; gap:0.8rem;">
       <h2 id="monthYearTitle" class="calendar-title" title="Buscar mes">Cargando...</h2>
-      <button id="btnUnlock" class="nav-btn" style="background:transparent; border: 1px solid rgba(255,255,255,0.2); padding: 0.3rem 0.6rem;" title="Ingresar como Administrador">🔒</button>
+      <button id="btnUnlock" class="nav-btn" style="background:transparent; border: 1px solid var(--glass-border); padding: 0.3rem 0.6rem;" title="Ingresar como Administrador">🔒</button>
     </div>
     
     <button id="nextMonth" class="nav-btn">&gt;</button>
@@ -214,6 +214,7 @@
       </div>
       <div style="font-size:0.9rem; color:var(--text-color); line-height: 1.6;">
         <p><strong>Cliente:</strong> ${nota.cliente}</p>
+        <p><strong>Socio:</strong> ${nota.socio ? 'Sí' : 'No'}</p>
         <p><strong>Teléfono:</strong> ${nota.telefono || '-'}</p>
         <p><strong>Registro:</strong> ${nota.creado_en}</p>
         <p><strong>Notas:</strong> <br/>${nota.notas || '-'}</p>
